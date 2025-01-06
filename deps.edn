@@ -1,8 +1,35 @@
-{:aliases  {:dev {:extra-paths ["development/src"]
+{:aliases
+ {:dev
+  {:extra-paths ["development/src"]
+   :extra-deps
+   {org.clojure/clojure {:mvn/version "1.12.0"}
+    poly-test-in-src.bricks/src-only {:local/root "components/src-only"}
+    poly-test-in-src.bricks/src-only-workaround {:local/root "components/src-only-workaround"}
+    poly-test-in-src.bricks/has-test-paths {:local/root "components/has-test-paths"}
+    poly-test-in-src.bricks/kaocha-runner-ext {:local/root "components/kaocha-runner-ext"}
+    poly-test-in-src.bricks/kaocha-wrapper-ext {:local/root "components/kaocha-wrapper-ext"}}}
 
-                  :extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}}}
+  :test
+  {:extra-paths
+   ["components/has-test-paths/test"]}
 
-            :test {:extra-paths []}
+  :poly
+  {:main-opts ["-m" "polylith.clj.core.poly-cli.core"]
+   :extra-deps
+   {polylith/clj-poly
+    {:git/url "https://github.com/polyfy/polylith"
+     :git/sha "2d850fb1e0b77ae335a7bd8f96c8f2b2ca18b469"
+     :deps/root "projects/poly"}
 
-            :poly {:main-opts ["-m" "polylith.clj.core.poly-cli.core"]
-                   :extra-deps {polylith/clj-poly {:mvn/version "0.2.21"}}}}}
+    polylith-kaocha/test-runner
+    {:git/url "https://github.com/imrekoszo/polylith-kaocha"
+     :git/tag "v0.8.4"
+     :git/sha "f096de8"
+     :deps/root "projects/test-runner"}
+
+    poly-test-in-src.bricks/kaocha-runner-ext {:local/root "components/kaocha-runner-ext"}
+
+    io.github.seancorfield/polylith-external-test-runner
+    {:git/tag "v0.6.1"
+     :git/sha "d0f51c2"
+     :deps/root "projects/runner"}}}}}

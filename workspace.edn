@@ -1,9 +1,28 @@
 {:top-namespace "imrekoszo.poly-test-in-src"
- :interface-ns "interface"
+ :interface-ns "ifc"
  :default-profile-name "default"
  :compact-views #{}
  :vcs {:name "git"
        :auto-add false}
  :tag-patterns {:stable "stable-*"
                 :release "v[0-9]*"}
- :projects {"development" {:alias "dev"}}}
+
+ :projects
+ {"development"
+  {:alias "dev"}
+
+  "normal"
+  {:alias "nrm"
+   :necessary ["src-only" "has-test-paths" "kaocha-wrapper-ext"]}
+
+  "workaround"
+  {:alias "war"
+   :necessary ["src-only-workaround" "has-test-paths" "kaocha-wrapper-ext"]}}
+
+ :test-configs
+ {:default {:create-test-runner [:default]}
+  :external {:create-test-runner [org.corfield.external-test-runner.interface/create]}
+  :kaocha {:create-test-runner [polylith-kaocha.test-runner/create]
+           :polylith-kaocha/config-resource "kaocha-wrapper-ext/tests.edn"}
+  :include-src-dir {:org.corfield/external-test-runner {:include-src-dir true}
+                    :polylith-kaocha/runner-opts->kaocha-poly-opts imrekoszo.poly-test-in-src.kaocha-runner-ext.ifc/runner-opts->kaocha-poly-opts}}}

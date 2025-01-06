@@ -1,0 +1,8 @@
+{:deps
+ {org.clojure/clojure {:mvn/version "1.12.0"}
+  poly-test-in-src.bricks/src-only-workaround {:local/root "../../components/src-only-workaround"}
+  poly-test-in-src.bricks/has-test-paths {:local/root "../../components/has-test-paths"}}
+
+ :aliases
+ {:test
+  {:extra-deps {poly-test-in-src.bricks/kaocha-wrapper-ext {:local/root "../../components/kaocha-wrapper-ext"}}}}}

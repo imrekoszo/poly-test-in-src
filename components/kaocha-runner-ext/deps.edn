@@ -1,0 +1,6 @@
+{:paths ["src"]
+ :deps {polylith-kaocha/test-runner
+        {:git/url "https://github.com/imrekoszo/polylith-kaocha"
+         :git/tag "v0.8.4"
+         :git/sha "f096de8"
+         :deps/root "projects/test-runner"}}}
