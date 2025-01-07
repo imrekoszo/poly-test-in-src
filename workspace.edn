@@ -17,7 +17,11 @@
 
   "workaround"
   {:alias "war"
-   :necessary ["src-only-workaround" "has-test-paths" "kaocha-wrapper-ext"]}}
+   :necessary ["src-only-workaround" "has-test-paths" "kaocha-wrapper-ext"]}
+
+  "dummy"
+  {:alias "dmy"
+   :necessary ["dummy-test" "has-test-paths" "kaocha-wrapper-ext"]}}
 
  :test-configs
  {:default {:create-test-runner [:default]}

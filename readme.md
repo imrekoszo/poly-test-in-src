@@ -14,7 +14,7 @@ This is always a possibility, however the configuration of that runner is nice a
 
 I would love to not have to depend on a hack like this, and it would be very nice to be able to have this extended list of bricks available under a key on the `project` map, but I'm not sure whether that aligns with the Polylith team's goals. In [polylith#448](https://github.com/polyfy/polylith/issues/448) it is stated that 3rd party test runners can implement running tests from src directories, but calculating `bricks-to-test` is not trivial (due to changes, selections etc.) and it would be better to rely on Polylith there.
 
-I present a workaround below that works across test runners but which isn't intuitive to find, doesn't look idiomatic, and potentially goes against Polylith norms.
+I present workarounds below that work varying across test runners but which isn't intuitive to find, doesn't look idiomatic, and potentially goes against Polylith norms.
 
 ## Repro
 
@@ -60,9 +60,9 @@ Actual:
 Tests failed [polylith-kaocha]
 ```
 
-## Workaround
+## Workaround 1: duplicate src paths as test paths
 
-A workaround exists: if a brick does not have test paths, duplicate its source paths in its test alias like so:
+A workaround (that I found in [poly-rcf](https://github.com/ieugen/poly-rcf) by @ieugen) exists: if a brick does not have test paths, duplicate its source paths (that contain tests) in its test alias like so:
 
 ```clojure
 {:paths ["src"]
@@ -70,7 +70,7 @@ A workaround exists: if a brick does not have test paths, duplicate its source p
  :aliases {:test {:extra-paths ["src"]}}}
  ```
 
-This makes all 3 above test runners trip on the failing test, even without the use of `:include-src-dir`.
+### This makes all 3 above test runners trip on the failing test, even without the use of `:include-src-dir`
 
 ```text
 ; clojure -Srepro -M:poly test project:workaround with:default
@@ -141,5 +141,133 @@ Expected:
 Actual:
   -:foo +:bar
 2 tests, 2 assertions, 1 failures.
+Tests failed [polylith-kaocha]
+```
+
+## Dummy test workaround
+
+@seancorfield suggests another potential workaround in [polylith#448](https://github.com/polyfy/polylith/issues/448): create a dummy test in projects where all proper tests are under the src directories.
+
+### Using this, none of the 3 test runners find the failing src test when `:include-src-dir` is not set
+
+```text
+; clojure -Srepro -M:poly test project:dummy with:default:external:kaocha
+Projects to run tests from: dummy
+
+Running tests for the dummy project using test runner: Polylith built-in clojure.test runner...
+Running tests from the dummy project, including 3 bricks: dummy-test, has-test-paths, kaocha-wrapper-ext
+
+Testing imrekoszo.poly-test-in-src.dummy-test.ifc-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+
+Test results: 1 passes, 0 failures, 0 errors.
+
+Testing imrekoszo.poly-test-in-src.has-test-paths.ifc-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+
+Test results: 1 passes, 0 failures, 0 errors.
+Running tests for the dummy project using test runner: Polylith org.corfield.external-test-runner...
+Running tests from the dummy project, including 3 bricks: dummy-test, has-test-paths, kaocha-wrapper-ext
+
+Testing imrekoszo.poly-test-in-src.dummy-test.ifc-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+
+Test results: 1 passes, 0 failures, 0 errors.
+
+Testing imrekoszo.poly-test-in-src.has-test-paths.ifc-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+
+Test results: 1 passes, 0 failures, 0 errors.
+Running tests for the dummy project using test runner: polylith-kaocha...
+[(.)(.)]
+2 tests, 2 assertions, 0 failures.
+
+Execution time: 3 seconds
+```
+
+### But both external and kaocha find the failing test when `:include-src-dir` is set
+
+(default doesn't)
+
+```text
+; clojure -Srepro -M:poly test project:dummy with:default:include-src-dir
+Projects to run tests from: dummy
+
+Running tests for the dummy project using test runner: Polylith built-in clojure.test runner...
+Running tests from the dummy project, including 3 bricks: dummy-test, has-test-paths, kaocha-wrapper-ext
+
+Testing imrekoszo.poly-test-in-src.dummy-test.ifc-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+
+Test results: 1 passes, 0 failures, 0 errors.
+
+Testing imrekoszo.poly-test-in-src.has-test-paths.ifc-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+
+Test results: 1 passes, 0 failures, 0 errors.
+
+Execution time: 1 seconds
+```
+
+```text
+; clojure -Srepro -M:poly test project:dummy with:external:include-src-dir
+Projects to run tests from: dummy
+
+Test runner options:
+  :include-src-dir => true
+
+Running tests for the dummy project using test runner: Polylith org.corfield.external-test-runner...
+Running tests from the dummy project, including 3 bricks: dummy-test, has-test-paths, kaocha-wrapper-ext
+
+Testing imrekoszo.poly-test-in-src.dummy-test.ifc-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+
+Test results: 1 passes, 0 failures, 0 errors.
+
+Testing imrekoszo.poly-test-in-src.dummy-test.ifc
+
+FAIL in (bad) (ifc.clj:6)
+expected: (= :foo (bad))
+  actual: (not (= :foo :bar))
+
+Ran 1 tests containing 1 assertions.
+1 failures, 0 errors.
+Execution error at org.corfield.external-test-runner-cli.main/-main$fn (main.clj:134).
+
+Test results: 0 passes, 1 failures, 0 errors.
+
+Full report at:
+/var/folders/sw/hg9d03hs7w50dfrhmxb4v6w00000gn/T/clojure-6345575265500441230.edn
+External test runner failed
+```
+
+```text
+; clojure -Srepro -M:poly test project:dummy with:kaocha:include-src-dir
+Projects to run tests from: dummy
+
+Running tests for the dummy project using test runner: polylith-kaocha...
+[(.)(F)(.)]
+Randomized with --seed 1186820747
+
+FAIL in imrekoszo.poly-test-in-src.dummy-test.ifc/bad (ifc.clj:6)
+Expected:
+  :foo
+Actual:
+  -:foo +:bar
+3 tests, 3 assertions, 1 failures.
 Tests failed [polylith-kaocha]
 ```
